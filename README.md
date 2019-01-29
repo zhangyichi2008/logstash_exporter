@@ -4,8 +4,8 @@ Prometheus exporter for the metrics available in Logstash since version 5.0.
 ## Usage
 
 ```bash
-go get -u github.com/mpucholblasco/logstash_exporter
-cd $GOPATH/src/github.com/mpucholblasco/logstash_exporter
+go get -u github.com/sequra/logstash_exporter
+cd $GOPATH/src/github.com/sequra/logstash_exporter
 make
 ./logstash_exporter --web.listen-address=:1234 --logstash.endpoint="http://localhost:1235"
 ```
@@ -59,8 +59,15 @@ Flags:
 * `logstash_node_pipeline_events_in_total` (counter)
 * `logstash_node_pipeline_events_out_total` (counter)
 * `logstash_node_pipeline_queue_push_duration_seconds_total` (counter)
+* `logstash_node_plugin_bulk_requests_failures_total` (counter)
+* `logstash_node_plugin_bulk_requests_successes_total` (counter)
+* `logstash_node_plugin_bulk_requests_with_errors_total` (counter)
+* `logstash_node_plugin_documents_failures_total` (counter)
+* `logstash_node_plugin_documents_successes_total` (counter)
 * `logstash_node_plugin_duration_seconds_total` (counter
 * `logstash_node_plugin_queue_push_duration_seconds_total` (counter)
+* `logstash_node_plugin_events_in_total` (counter)
+* `logstash_node_plugin_events_out_total` (counter)
 * `logstash_node_process_cpu_total_seconds_total` (counter)
 * `logstash_node_process_max_filedescriptors` (gauge)
 * `logstash_node_process_mem_total_virtual_bytes` (gauge)
