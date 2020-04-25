@@ -13,6 +13,7 @@ services:
       - "5044:5044"
     volumes:
       - ./pipeline-logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./logstash.yml:/usr/share/logstash/config/logstash.yml
     healthcheck:
       test: bin/logstash -t
       interval: 60s
