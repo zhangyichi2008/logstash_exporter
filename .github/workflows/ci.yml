@@ -24,7 +24,8 @@ jobs:
       - name: Setup Codacy Analyze Tool
         run: |
           curl -L https://github.com/codacy/codacy-analysis-cli/archive/master.tar.gz | \
-          tar xvz && cd codacy-analysis-cli-* && sudo make install
+          tar xvz && cd codacy-analysis-cli-* && sudo make install \
+          && cd .. && rm -rf master.* codacy-analysis-cli-*
 
       - name: Formatting
         run: go fmt ./...
