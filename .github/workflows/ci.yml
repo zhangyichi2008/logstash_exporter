@@ -21,11 +21,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup Codacy Analyze Tool
-        run: |
-          curl -L https://github.com/codacy/codacy-analysis-cli/archive/master.tar.gz | \
-          tar xvz && cd codacy-analysis-cli-* && sudo make install \
-          && cd .. && rm -rf master.* codacy-analysis-cli-*
+#      - name: Setup Codacy Analyze Tool
+#        run: |
+#          curl -L https://github.com/codacy/codacy-analysis-cli/archive/master.tar.gz | \
+#          tar xvz && cd codacy-analysis-cli-* && sudo make install \
+#          && cd .. && rm -rf master.* codacy-analysis-cli-*
 
       - name: Formatting
         run: go fmt ./...
@@ -33,12 +33,20 @@ jobs:
       - name: Testing
         run: go test -short ./...
 
-      - name: Run aligncheck
-        run: |
-          codacy-analysis-cli analyze --provider gh \
-          --username leroy-merlin-br \
-          --project logstash_exporter \
-          --tool aligncheck \
-          --allow-network \
-          --upload \
-          --verbose
+#      - name: Run aligncheck
+#        run: |
+#          codacy-analysis-cli analyze --provider gh \
+#          --username leroy-merlin-br \
+#          --project logstash_exporter \
+#          --tool aligncheck \
+#          --allow-network \
+#          --upload \
+#          --verbose
+
+      - name: Run Codacy Analysis CLI
+        uses: codacy/codacy-analysis-cli-action@master
+        with:
+          tool: aligncheck
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          upload: true
+          max-allowed-issues: 2147483647
