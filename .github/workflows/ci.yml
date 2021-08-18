@@ -47,6 +47,9 @@ jobs:
         uses: codacy/codacy-analysis-cli-action@master
         with:
           tool: aligncheck
+          run-staticcheck: true
+          run-gosec: true
+          run-docker-tools: true
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           upload: true
           max-allowed-issues: 2147483647
