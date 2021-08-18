@@ -1,0 +1,28 @@
+name: 'Continuous Integration'
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  unit-testing:
+    name: "Unit testing"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Setup
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.13
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Check formatting
+        run: go fmt ./...
+
+      - name: Testing
+        run: go test -short ./...
