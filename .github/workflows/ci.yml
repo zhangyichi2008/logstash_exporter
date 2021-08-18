@@ -23,7 +23,7 @@ jobs:
 
       - name: Setup Codacy aligncheck
         run: |
-          curl -L https://github.com/codacy/codacy-analysis-cli/archive/master.tar.gz |
+          curl -L https://github.com/codacy/codacy-analysis-cli/archive/master.tar.gz | \
           tar xvz cd codacy-analysis-cli-* && sudo make install
 
       - name: Formatting
