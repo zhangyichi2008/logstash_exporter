@@ -1,9 +1,6 @@
 name: 'Code Analysis'
 
 on:
-  push:
-    branches:
-      - chore/support-github-actions
   pull_request:
     branches:
       - main
