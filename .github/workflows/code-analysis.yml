@@ -38,3 +38,15 @@ jobs:
          --allow-network \
          --upload \
          --verbose
+
+      - name: Run deadcode
+        env:
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        run: |
+         codacy-analysis-cli analyze --provider gh \
+         --username leroy-merlin-br \
+         --project logstash_exporter \
+         --tool deadcode \
+         --allow-network \
+         --upload \
+         --verbose
