@@ -28,6 +28,8 @@ jobs:
          && cd .. && rm -rf master.* codacy-analysis-cli-*
 
       - name: Run aligncheck
+        env:
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
         run: |
          codacy-analysis-cli analyze --provider gh \
          --username leroy-merlin-br \
