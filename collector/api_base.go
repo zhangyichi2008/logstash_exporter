@@ -4,13 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-kit/log/level"
-	"github.com/prometheus/common/promlog"
-)
-
-var (
-	promlogCfg = &promlog.Config{}
-	logger     = promlog.New(promlogCfg)
+	"github.com/rs/zerolog/log"
 )
 
 // HTTPHandler type
@@ -36,19 +30,19 @@ type HTTPHandlerInterface interface {
 func getMetrics(h HTTPHandlerInterface, target interface{}) error {
 	response, err := h.Get()
 	if err != nil {
-		level.Error(logger).Log("Cannot retrieve metrics: %v", err)
+		log.Error().AnErr("Cannot retrieve metrics:", err)
 		return err
 	}
 
 	defer func() {
 		if err := response.Body.Close(); err != nil {
-			level.Error(logger).Log("Cannot close response body: %v", err)
+			log.Error().AnErr("Cannot close response body", err)
 		}
 	}()
 
 	err = json.NewDecoder(response.Body).Decode(target)
 	if err != nil {
-		level.Error(logger).Log("Cannot parse Logstash response json: %v", err)
+		log.Error().AnErr("Cannot parse logstash response JSON", err)
 	}
 
 	return err

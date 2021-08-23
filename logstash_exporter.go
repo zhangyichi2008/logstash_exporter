@@ -6,13 +6,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-kit/log/level"
+	"github.com/rs/zerolog"
+
 	"github.com/leroy-merlin-br/logstash_exporter/collector"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/promlog"
-	"github.com/prometheus/common/promlog/flag"
 	"github.com/prometheus/common/version"
+	"github.com/rs/zerolog/log"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -26,8 +26,6 @@ var (
 		},
 		[]string{"collector", "result"},
 	)
-	promlogCfg = &promlog.Config{}
-	logger     = promlog.New(promlogCfg)
 )
 
 // LogstashCollector collector type
@@ -39,12 +37,12 @@ type LogstashCollector struct {
 func NewLogstashCollector(logstashEndpoint string) (*LogstashCollector, error) {
 	nodeStatsCollector, err := collector.NewNodeStatsCollector(logstashEndpoint)
 	if err != nil {
-		level.Error(logger).Log("Cannot register a new collector: %v", err)
+		log.Error().AnErr("Cannot register a new collector", err)
 	}
 
 	nodeInfoCollector, err := collector.NewNodeInfoCollector(logstashEndpoint)
 	if err != nil {
-		level.Error(logger).Log("Cannot register a new collector: %v", err)
+		log.Error().AnErr("Cannot register a new collector", err)
 	}
 
 	return &LogstashCollector{
@@ -61,9 +59,9 @@ func listen(exporterBindAddress string) {
 		http.Redirect(w, r, "/metrics", http.StatusMovedPermanently)
 	})
 
-	level.Info(logger).Log("Starting server on", exporterBindAddress)
+	log.Info().Str("port", exporterBindAddress).Msg("Exporter started.")
 	if err := http.ListenAndServe(exporterBindAddress, nil); err != nil {
-		level.Error(logger).Log("Cannot start Logstash exporter: %s", err)
+		log.Error().Err(err).Msg("Exiting...")
 	}
 }
 
@@ -93,10 +91,11 @@ func execute(name string, c collector.Collector, ch chan<- prometheus.Metric) {
 	var result string
 
 	if err != nil {
-		level.Debug(logger).Log("ERROR: %s collector failed after %fs: %s", name, duration.Seconds(), err)
+		log.Info().Msg("Failed to fetch metrics.")
+		log.Debug().Str("collector", name).Float64("duration", duration.Seconds()).Err(err).Msg("Failed to fetch metrics.")
 		result = "error"
 	} else {
-		level.Debug(logger).Log("OK: %s collector succeeded after %fs.", name, duration.Seconds())
+		log.Debug().Str("collector", name).Float64("duration", duration.Seconds()).Msg("Collected metrics with success.")
 		result = "success"
 	}
 	scrapeDurations.WithLabelValues(name, result).Observe(duration.Seconds())
@@ -109,24 +108,33 @@ func init() {
 func main() {
 	var (
 		logstashEndpoint    = kingpin.Flag("logstash.endpoint", "The protocol, host and port on which logstash metrics API listens").Default("http://localhost:9600").String()
-		exporterBindAddress = kingpin.Flag("web.listen-address", "Address on which to expose metrics and web interface.").Default(":9198").String()
+		exporterBindAddress = kingpin.Flag("listen.address", "Address on which to expose metrics and web interface.").Default(":9198").String()
+		logLevel            = kingpin.Flag("log.level", "Set log level to debug").Default("info").String()
 	)
-
-	flag.AddFlags(kingpin.CommandLine, promlogCfg)
 
 	kingpin.Version(version.Print("logstash_exporter"))
 	kingpin.HelpFlag.Short('h')
 	kingpin.Parse()
 
+	switch *logLevel {
+	case "debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	default:
+		log.Fatal().Msg("Log level needs to be set to \"info\" or \"debug\".")
+	}
+
 	logstashCollector, err := NewLogstashCollector(*logstashEndpoint)
 	if err != nil {
-		level.Info(logger).Log("Cannot register a new Logstash Collector: %v", err)
+		log.Error().Err(err).Msg("Cannot register a new logstash collector")
 	}
 
 	prometheus.MustRegister(logstashCollector)
 
-	level.Info(logger).Log("Starting Logstash exporter", version.Info())
-	level.Info(logger).Log("Build context", version.BuildContext())
+	log.Info().Msg("Starting logstash exporter...")
+	log.Debug().Msg(version.Info())
+	log.Debug().Msg(version.BuildContext())
 
 	listen(*exporterBindAddress)
 }
