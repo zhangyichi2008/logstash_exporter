@@ -2,7 +2,7 @@
 
 # logstash-exporter 
 
-Exports [Logstash]() metrics to [Prometheus]() for monitoring.
+Exports [Logstash](https://www.elastic.co/logstash/) metrics to [Prometheus](https://prometheus.io/) for monitoring.
 
 ## Version compatibility and some important info
 
