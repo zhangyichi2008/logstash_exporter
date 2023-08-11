@@ -1,38 +1,59 @@
-![GitHub](https://img.shields.io/github/license/leroy-merlin-br/logstash-exporter) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/leroy-merlin-br/logstash-exporter)
-
-# logstash-exporter 
+# logstash_exporter 
 
 Exports [Logstash](https://www.elastic.co/logstash/) metrics to [Prometheus](https://prometheus.io/) for monitoring.
 
-## Version compatibility and some important info
+**v0.0.2 / 2023-08-11**
 
-The exporter only supports Logstash >= v7.3. For earlier versions please check 
-[sequra/logstash_exporter](https://github.com/sequra/logstash_exporter).
+**[ADD] 增加对logstash过滤状态pipelines_filters_failures的监控**
 
-As some may notice, this is exporter is a result of multiple forks, we decided to create another version for a number 
-of reasons:
-- [sequra/logstash_exporter](https://github.com/sequra/logstash_exporter) maintainers doesn't seem to care about the 
-  project anymore.
-- This project builds binaries and docker images, eliminating the need for a project like
-  [bitnami/bitnami-docker-logstash-exporter](https://github.com/bitnami/bitnami-docker-logstash-exporter) which downloads
-  a binary from [their servers](https://github.com/bitnami/bitnami-docker-logstash-exporter/blob/master/7.3/debian-10/Dockerfile#L12), 
-  which is **super creepy**.
-- Bitnami's project doesn't offer a build for other architectures such as `arm64` and here at Leroy Merlin Brasil we 
-  rely heavily on Logstash pods running on Graviton nodes.
+- HELP logstash_node_pipelines_filters_failures pipelines_filters_failures
+- TYPE logstash_node_pipelines_filters_failures counter
+- logstash_node_pipelines_filters_failures{id="apache_access_hr_drop",name="drop"} 0
+- logstash_node_pipelines_filters_failures{id="apache_access_hr_mutate",name="mutate"} 0
+- logstash_node_pipelines_filters_failures{id="apache_access_hr_useragent",name="useragent"} 0
 
-## Run
+**[DEL] 移除以go_开头的33个监控项,具体如下：**
 
-For pre-built binaries, check the [releases page](https://github.com/leroy-merlin-br/logstash-exporter/releases).
+- go_gc_duration_seconds{quantile="0"}
+- go_gc_duration_seconds{quantile="0.25"}
+- go_gc_duration_seconds{quantile="0.5"}
+- go_gc_duration_seconds{quantile="0.75"}
+- go_gc_duration_seconds{quantile="1"}
+- go_gc_duration_seconds_sum
+- go_gc_duration_seconds_count
+- go_goroutines
+- go_info{version="go1.19.1"}
+- go_memstats_alloc_bytes
+- go_memstats_alloc_bytes_total
+- go_memstats_buck_hash_sys_bytes
+- go_memstats_frees_total
+- go_memstats_gc_sys_bytes
+- go_memstats_heap_alloc_bytes
+- go_memstats_heap_idle_bytes
+- go_memstats_heap_inuse_bytes
+- go_memstats_heap_objects
+- go_memstats_heap_released_bytes
+- go_memstats_heap_sys_bytes
+- go_memstats_last_gc_time_seconds
+- go_memstats_lookups_total
+- go_memstats_mallocs_total
+- go_memstats_mcache_inuse_bytes
+- go_memstats_mcache_sys_bytes
+- go_memstats_mspan_inuse_bytes
+- go_memstats_mspan_sys_bytes
+- go_memstats_next_gc_bytes
+- go_memstats_other_sys_bytes
+- go_memstats_stack_inuse_bytes
+- go_memstats_stack_sys_bytes
+- go_memstats_sys_bytes
+- go_threads
 
-### Docker
 
+###Build and CLI
 ```sh
-docker run leroymerlinbr/logstash_exporter:latest
-```
+cd logstash_exporter/
+go build .
 
-### CLI
-
-```sh
 logstash_exporter <flags>
   -h, --help                    Show context-sensitive help (also try --help-long and --help-man).
       --logstash.endpoint="http://localhost:9600"  
@@ -65,22 +86,7 @@ logstash_exporter <flags>
 | `logstash_node_mem_pool_peak_max_bytes` | gauge | |
 | `logstash_node_mem_pool_peak_used_bytes` | gauge | |
 | `logstash_node_mem_pool_used_bytes` | gauge | |
-| `logstash_node_pipeline_duration_seconds_total` | counter | |
-| `logstash_node_pipeline_events_filtered_total` | counter | |
-| `logstash_node_pipeline_events_in_total` | counter | |
-| `logstash_node_pipeline_events_out_total` | counter | |
-| `logstash_node_pipeline_queue_push_duration_seconds_total` | counter | |
-| `logstash_node_plugin_bulk_requests_failures_total` | counter | |
-| `logstash_node_plugin_bulk_requests_successes_total` | counter | |
-| `logstash_node_plugin_bulk_requests_with_errors_total` | counter | |
-| `logstash_node_plugin_documents_failures_total` | counter | |
-| `logstash_node_plugin_documents_successes_total` | counter | |
-| `logstash_node_plugin_duration_seconds_total` (| counter | |
-| `logstash_node_plugin_queue_push_duration_seconds_total` | counter | |
-| `logstash_node_plugin_events_in_total` | counter | |
-| `logstash_node_plugin_events_out_total` | counter | |
-| `logstash_node_plugin_current_connections_count` | gauge
-| `logstash_node_plugin_peak_connections_count` | gauge
+| `logstash_node_pipelines_filters_failures` | counter | |
 | `logstash_node_process_cpu_total_seconds_total` | counter | |
 | `logstash_node_process_max_filedescriptors` | gauge
 | `logstash_node_process_mem_total_virtual_bytes` | gauge
@@ -91,15 +97,3 @@ logstash_exporter <flags>
 | `logstash_node_dead_letter_queue_size_bytes` | counter | |
 | `logstash_node_up`: | gauge | whether logstash node is up (1) or not (0) |
 
-## Contributing
-
-We welcome any contributions. We appreciate pretty git commit messages such as 
-[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
-
-Please check the [Issues](https://github.com/leroy-merlin-br/logstash-exporter/issues) page for features and bugs that
-need some love.
-
-### Integration tests
-
-In order to execute manual integration tests (to be sure certain logstash version is compatible with logstash_exporter),
-you can follow instructions [here](integration-tests/README.md).

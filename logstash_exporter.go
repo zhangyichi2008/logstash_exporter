@@ -3,19 +3,25 @@ package main
 import (
 	"net/http"
 	_ "net/http/pprof"
+	"runtime"
 	"sync"
 	"time"
 
-	"github.com/leroy-merlin-br/logstash_exporter/collector"
+	"logstash_exporter/collector"
+
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
+	BuildVersion    = "v0.0.2"
+	BuildUser       = "zhangyichi"
+	BuildDate       = "2023-08-11-16:41:38"
+	BuildBranch     = "https://github.com/zhangyichi2008/logstash_exporter.git"
 	scrapeDurations = prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Namespace: collector.Namespace,
@@ -52,8 +58,8 @@ func NewLogstashCollector(logstashEndpoint string) (*LogstashCollector, error) {
 	}, nil
 }
 
-func listen(exporterBindAddress string) {
-	http.Handle("/metrics", promhttp.Handler())
+func listen(exporterBindAddress string, registry *prometheus.Registry) {
+	http.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{Registry: registry}))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/metrics", http.StatusMovedPermanently)
 	})
@@ -100,10 +106,6 @@ func execute(name string, c collector.Collector, ch chan<- prometheus.Metric) {
 	scrapeDurations.WithLabelValues(name, result).Observe(duration.Seconds())
 }
 
-func init() {
-	prometheus.MustRegister(version.NewCollector("logstash_exporter"))
-}
-
 func main() {
 	var (
 		logstashEndpoint    = kingpin.Flag("logstash.endpoint", "The protocol, host and port on which logstash metrics API listens.").Default("http://localhost:9600").String()
@@ -111,7 +113,7 @@ func main() {
 		logLevel            = kingpin.Flag("log.level", "The logging level to be defined.").Default("info").String()
 	)
 
-	kingpin.Version(version.Print("logstash_exporter"))
+	kingpin.Version(collector.VersionPrint("logstash_exporter", BuildVersion, BuildUser, BuildDate, BuildBranch))
 	kingpin.HelpFlag.Short('h')
 	kingpin.Parse()
 
@@ -129,11 +131,15 @@ func main() {
 		log.Error().Err(err).Msg("Cannot register a new logstash collector")
 	}
 
-	prometheus.MustRegister(logstashCollector)
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+	registry.MustRegister(collector.VersionCollector("logstash_exporter", BuildVersion, BuildBranch))
+	registry.MustRegister(logstashCollector)
 
+	log.Info().Msg("Foxconn Logstash Exporter " + BuildVersion + "   build date:" + BuildDate + "   Go:" + runtime.Version() + "   GOOS:" + runtime.GOOS + "   GOARCH:" + runtime.GOARCH)
 	log.Info().Msg("Starting logstash exporter...")
 	log.Debug().Msg(version.Info())
 	log.Debug().Msg(version.BuildContext())
 
-	listen(*exporterBindAddress)
+	listen(*exporterBindAddress, registry)
 }
